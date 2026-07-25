@@ -3,26 +3,59 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="color-scheme" content="light dark">
         <title>Task Board</title>
 
       <style>
         :root {
-            --bg: #f5f7fb;
+            --bg: #f2f3f8;
             --panel: #ffffff;
-            --panel-muted: #eef2f9;
-            --text: #1b2430;
-            --text-muted: #5f6d7a;
-            --line: #d6deeb;
-            --todo-accent: #5d6dc3;
-            --inprogress-accent: #c4862a;
-            --done-accent: #2d9b75;
-            --priority-bg: #eef3ff;
-            --priority-text: #3f53ad;
-            --error-bg: #fff4f3;
-            --error-line: #e7b8b1;
-            --error-text: #8a3228;
-            --radius: 14px;
-            --shadow: 0 4px 14px rgba(27, 36, 48, 0.08);
+            --panel-muted: #f6f7fb;
+            --text: #161922;
+            --text-muted: #667085;
+            --line: #e4e7ec;
+            --todo-accent: #6366f1;
+            --inprogress-accent: #d97706;
+            --done-accent: #059669;
+            --avatar-bg: rgba(99, 102, 241, 0.14);
+            --priority-high: #dc2626;
+            --priority-high-bg: #fef2f2;
+            --priority-medium: #b45309;
+            --priority-medium-bg: #fffbeb;
+            --priority-low: #047857;
+            --priority-low-bg: #ecfdf5;
+            --error-bg: #fef2f2;
+            --error-line: #fecaca;
+            --error-text: #b91c1c;
+            --radius: 18px;
+            --radius-sm: 10px;
+            --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+            --shadow-md: 0 4px 16px rgba(16, 24, 40, 0.08), 0 1px 3px rgba(16, 24, 40, 0.06);
+            --shadow-lg: 0 24px 48px -12px rgba(16, 24, 40, 0.35);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0b0d12;
+                --panel: #171a21;
+                --panel-muted: #1d212b;
+                --text: #eceef1;
+                --text-muted: #9aa3af;
+                --line: #2b303b;
+                --avatar-bg: rgba(129, 140, 248, 0.18);
+                --priority-high: #f87171;
+                --priority-high-bg: rgba(239, 68, 68, 0.15);
+                --priority-medium: #fbbf24;
+                --priority-medium-bg: rgba(217, 119, 6, 0.16);
+                --priority-low: #34d399;
+                --priority-low-bg: rgba(5, 150, 105, 0.16);
+                --error-bg: rgba(239, 68, 68, 0.12);
+                --error-line: rgba(239, 68, 68, 0.35);
+                --error-text: #f87171;
+                --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+                --shadow-md: 0 4px 18px rgba(0, 0, 0, 0.45);
+                --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.65);
+            }
         }
 
         * {
@@ -33,8 +66,12 @@
             margin: 0;
             min-height: 100vh;
             color: var(--text);
-            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-            background: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
+            background:
+                radial-gradient(circle at 10% -10%, rgba(99, 102, 241, 0.10), transparent 40%),
+                radial-gradient(circle at 90% 0%, rgba(5, 150, 105, 0.08), transparent 35%),
+                var(--bg);
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
         .page {
@@ -54,8 +91,8 @@
             background: var(--panel);
             border: 1px solid var(--line);
             border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 1.25rem 1.75rem;
+            box-shadow: var(--shadow-md);
+            padding: 1.4rem 1.85rem;
         }
 
         .app-header {
@@ -73,29 +110,42 @@
         }
 
         .new-task-btn {
-            border: 1px solid var(--todo-accent);
-            background: var(--todo-accent);
+            border: none;
+            background: linear-gradient(135deg, var(--todo-accent), #818cf8);
             color: #ffffff;
-            border-radius: 8px;
-            padding: 0.45rem 0.85rem;
+            border-radius: var(--radius-sm);
+            padding: 0.55rem 1.05rem;
             font-size: 0.9rem;
             font-weight: 700;
             cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
         }
 
         .new-task-btn:hover {
-            filter: brightness(0.95);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+            filter: brightness(1.03);
+        }
+
+        .new-task-btn:active {
+            transform: translateY(0);
         }
 
         .app-header h1 {
             margin: 0;
             font-size: clamp(1.8rem, 3vw, 2.4rem);
-            letter-spacing: 0.02em;
+            font-weight: 800;
+            letter-spacing: -0.02em;
         }
 
         .app-header h1 a {
             color: inherit;
             text-decoration: none;
+            background: linear-gradient(135deg, var(--text), var(--todo-accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .app-header h1 a:hover,
@@ -109,6 +159,25 @@
             max-width: 56ch;
         }
 
+        .board-message {
+            margin-bottom: 0.85rem;
+            padding: 0.75rem 0.95rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--line);
+            background: var(--panel-muted);
+            color: var(--text);
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .board-message.is-error {
+            background: var(--error-bg);
+            border-color: var(--error-line);
+            color: var(--error-text);
+        }
+
         .board {
             display: grid;
             grid-template-columns: repeat(3, minmax(220px, 1fr));
@@ -119,9 +188,23 @@
         .column {
             background: var(--panel-muted);
             border: 1px solid var(--line);
+            border-top: 3px solid transparent;
             border-radius: var(--radius);
             padding: 0.9rem;
             min-height: 340px;
+            transition: outline-color 0.12s ease, background-color 0.12s ease;
+        }
+
+        .column[data-status="ToDo"] {
+            border-top-color: var(--todo-accent);
+        }
+
+        .column[data-status="InProgress"] {
+            border-top-color: var(--inprogress-accent);
+        }
+
+        .column[data-status="Done"] {
+            border-top-color: var(--done-accent);
         }
 
         .column-header {
@@ -174,10 +257,10 @@
         .card-list:empty::before {
             content: "No tasks in this column yet.";
             display: block;
-            border: 1px dashed #bcc8da;
-            background: #f8faff;
-            color: #738297;
-            border-radius: 10px;
+            border: 1px dashed var(--line);
+            background: var(--panel);
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
             padding: 0.85rem;
             text-align: center;
             font-size: 0.9rem;
@@ -186,9 +269,15 @@
         .task-card {
             background: var(--panel);
             border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 0.9rem;
-            box-shadow: var(--shadow);
+            border-radius: 14px;
+            padding: 0.95rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .task-card.is-error {
@@ -220,6 +309,7 @@
         .task-title {
             margin: 0 0 0.35rem;
             font-size: 1rem;
+            font-weight: 700;
         }
 
         .task-description {
@@ -230,33 +320,58 @@
         }
 
         .task-meta {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.35rem;
-            margin-bottom: 0.7rem;
-            font-size: 0.87rem;
-            color: #324132;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.45rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.83rem;
         }
 
-        .task-meta span:first-child {
+        .priority-badge {
             display: inline-flex;
             align-items: center;
-            justify-self: start;
-            padding: 0.22rem 0.56rem;
+            padding: 0.22rem 0.6rem;
             border-radius: 999px;
-            background: var(--priority-bg);
-            color: var(--priority-text);
-            border: 1px solid #d6dffc;
             font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.01em;
         }
 
-        .task-meta span:first-child strong {
-            margin-right: 0.25rem;
-            font-weight: 700;
+        .priority-badge[data-priority="High"] {
+            background: var(--priority-high-bg);
+            color: var(--priority-high);
         }
 
-        .task-meta strong {
-            font-weight: 700;
+        .priority-badge[data-priority="Medium"] {
+            background: var(--priority-medium-bg);
+            color: var(--priority-medium);
+        }
+
+        .priority-badge[data-priority="Low"] {
+            background: var(--priority-low-bg);
+            color: var(--priority-low);
+        }
+
+        .assignee-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .assignee-avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 999px;
+            background: var(--avatar-bg);
+            color: var(--todo-accent);
+            font-size: 0.72rem;
+            font-weight: 800;
         }
 
         .task-actions {
@@ -265,26 +380,28 @@
         }
 
         .edit-btn {
-            border: 1px solid #a9b7a0;
-            background: #f7f9fc;
-            color: #2a3644;
-            border-radius: 8px;
-            padding: 0.35rem 0.7rem;
+            border: 1px solid var(--line);
+            background: var(--panel-muted);
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            padding: 0.35rem 0.75rem;
             font-size: 0.86rem;
             font-weight: 600;
             cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
         }
 
         .edit-btn:hover {
-            background: #eef3fa;
+            background: var(--panel);
+            border-color: var(--todo-accent);
         }
 
         .card-list.is-loading .task-card {
             position: relative;
             min-height: 122px;
             overflow: hidden;
-            background: #f4f7fc;
-            border-color: #d9e1ef;
+            background: var(--panel-muted);
+            border-color: var(--line);
             box-shadow: none;
         }
 
@@ -298,9 +415,9 @@
             inset: 0;
             background: linear-gradient(
                 90deg,
-                rgba(217, 225, 239, 0.4) 10%,
-                rgba(217, 225, 239, 0.85) 45%,
-                rgba(217, 225, 239, 0.4) 80%
+                transparent 10%,
+                rgba(127, 137, 156, 0.18) 45%,
+                transparent 80%
             );
             transform: translateX(-100%);
             animation: loading-sheen 1.2s infinite;
@@ -309,16 +426,22 @@
         .modal {
             position: fixed;
             inset: 0;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
             padding: 1rem;
-            background: rgba(14, 22, 34, 0.45);
+            background: rgba(10, 12, 18, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             z-index: 20;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.18s ease, visibility 0.18s ease;
         }
 
         .modal.is-open {
-            display: flex;
+            opacity: 1;
+            visibility: visible;
         }
 
         .modal-dialog {
@@ -326,8 +449,14 @@
             background: var(--panel);
             border: 1px solid var(--line);
             border-radius: var(--radius);
-            box-shadow: 0 18px 40px rgba(14, 22, 34, 0.2);
-            padding: 1rem;
+            box-shadow: var(--shadow-lg);
+            padding: 1.1rem;
+            transform: translateY(10px) scale(0.98);
+            transition: transform 0.18s ease;
+        }
+
+        .modal.is-open .modal-dialog {
+            transform: translateY(0) scale(1);
         }
 
         .modal-header {
@@ -339,23 +468,31 @@
 
         .modal-title {
             margin: 0;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
+            font-weight: 800;
         }
 
         .modal-close {
             border: 1px solid var(--line);
-            background: #f7f9fc;
-            border-radius: 8px;
-            width: 2rem;
-            height: 2rem;
+            background: var(--panel-muted);
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            width: 2.1rem;
+            height: 2.1rem;
             font-size: 1rem;
             cursor: pointer;
             line-height: 1;
+            transition: background-color 0.15s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--error-bg);
+            color: var(--error-text);
         }
 
         .task-form {
             display: grid;
-            gap: 0.75rem;
+            gap: 0.8rem;
         }
 
         .form-row {
@@ -372,12 +509,21 @@
         .task-form select,
         .task-form textarea {
             width: 100%;
-            border: 1px solid #bcc8da;
-            border-radius: 8px;
-            padding: 0.5rem 0.6rem;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-sm);
+            padding: 0.55rem 0.65rem;
             font: inherit;
             color: var(--text);
-            background: #ffffff;
+            background: var(--panel);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .task-form input:focus,
+        .task-form select:focus,
+        .task-form textarea:focus {
+            outline: none;
+            border-color: var(--todo-accent);
+            box-shadow: 0 0 0 3px var(--avatar-bg);
         }
 
         .task-form textarea {
@@ -397,7 +543,7 @@
             border: 1px solid var(--error-line);
             background: var(--error-bg);
             color: var(--error-text);
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             padding: 0.55rem 0.65rem;
             font-size: 0.87rem;
         }
@@ -410,25 +556,45 @@
             display: flex;
             justify-content: flex-end;
             gap: 0.55rem;
+            margin-top: 0.2rem;
         }
 
         .btn-secondary {
             border: 1px solid var(--line);
-            background: #f7f9fc;
+            background: var(--panel);
             color: var(--text);
-            border-radius: 8px;
-            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.8rem;
             cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.15s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--panel-muted);
         }
 
         .btn-primary {
-            border: 1px solid var(--todo-accent);
-            background: var(--todo-accent);
+            border: none;
+            background: linear-gradient(135deg, var(--todo-accent), #818cf8);
             color: #fff;
-            border-radius: 8px;
-            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.85rem;
             cursor: pointer;
             font-weight: 700;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         @keyframes loading-sheen {
@@ -567,14 +733,9 @@
 
                 message = document.createElement("div");
                 message.id = "board-message";
+                message.className = "board-message";
                 message.setAttribute("aria-live", "polite");
                 message.style.display = "none";
-                message.style.marginBottom = "0.85rem";
-                message.style.padding = "0.75rem 0.9rem";
-                message.style.borderRadius = "10px";
-                message.style.border = "1px solid #bcc8da";
-                message.style.background = "#f8faff";
-                message.style.color = "#2a3644";
 
                 const board = document.getElementById("board");
                 board.parentElement.insertBefore(message, board);
@@ -584,6 +745,7 @@
             function clearBoardMessage() {
                 const message = getBoardMessageElement();
                 message.style.display = "none";
+                message.classList.remove("is-error");
                 message.replaceChildren();
             }
 
@@ -712,23 +874,14 @@
                 content.textContent = text;
 
                 message.replaceChildren(content);
-                message.style.display = "block";
-
-                if (options.isError) {
-                    message.style.background = "#fff4f3";
-                    message.style.border = "1px solid #e7b8b1";
-                    message.style.color = "#8a3228";
-                } else {
-                    message.style.background = "#f8faff";
-                    message.style.border = "1px solid #bcc8da";
-                    message.style.color = "#2a3644";
-                }
+                message.style.display = "flex";
+                message.classList.toggle("is-error", Boolean(options.isError));
 
                 if (options.showRetry) {
                     const retryBtn = document.createElement("button");
                     retryBtn.type = "button";
-                    retryBtn.className = "edit-btn";
-                    retryBtn.style.marginLeft = "0.75rem";
+                    retryBtn.className = "btn-secondary";
+                    retryBtn.style.marginLeft = "auto";
                     retryBtn.textContent = "Retry";
                     retryBtn.addEventListener("click", () => {
                         fetchTasks();
@@ -772,9 +925,11 @@
             function renderTaskCard(task) {
                 const safeTitle = escapeHtml(task.title || "Untitled task");
                 const safeDescription = escapeHtml(task.description || "");
-                const safePriority = escapeHtml(task.priority || "Low");
+                const priority = task.priority || "Low";
+                const safePriority = escapeHtml(priority);
                 const safeAssignee = escapeHtml(task.assignee || "Unassigned");
                 const safeTaskId = escapeHtml(task.id ?? "");
+                const assigneeInitial = escapeHtml((task.assignee || "?").trim().charAt(0).toUpperCase() || "?");
                 const descriptionHtml = safeDescription
                     ? `<p class="task-description">${safeDescription}</p>`
                     : "";
@@ -784,8 +939,8 @@
                         <h3 class="task-title">${safeTitle}</h3>
                         ${descriptionHtml}
                         <div class="task-meta">
-                            <span><strong>Priority:</strong> ${safePriority}</span>
-                            <span><strong>Assignee:</strong> ${safeAssignee}</span>
+                            <span class="priority-badge" data-priority="${safePriority}">${safePriority}</span>
+                            <span class="assignee-chip"><span class="assignee-avatar">${assigneeInitial}</span>${safeAssignee}</span>
                         </div>
                         <div class="task-actions">
                             <button type="button" class="edit-btn">Edit</button>

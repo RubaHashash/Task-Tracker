@@ -116,11 +116,73 @@ def test_patch_not_found_returns_404(client):
 	assert response.json() == {"detail": f"Task with id {task_id} not found"}
 
 
+def test_patch_missing_task_id_with_status_payload_should_return_not_found(client):
+	task_id = "missing-id"
+	response = client.patch(f"/tasks/{task_id}", json={"status": "InProgress"})
+
+	assert response.status_code == 404
+	assert response.json() == {"detail": f"Task with id {task_id} not found"}
+
+
 def test_patch_valid_transition_todo_to_inprogress_returns_200(client, created_task):
 	response = client.patch(f"/tasks/{created_task['id']}", json={"status": "InProgress"})
 
 	assert response.status_code == 200
 	assert response.json()["status"] == "InProgress"
+
+
+def test_patch_task_from_inprogress_to_done_should_succeed_and_persist_the_new_status(client):
+	create_response = client.post(
+		"/tasks",
+		json={
+			"title": "Move to done",
+			"status": "InProgress",
+			"priority": "Medium",
+		},
+	)
+	assert create_response.status_code == 201
+	task_id = create_response.json()["id"]
+
+	response = client.patch(f"/tasks/{task_id}", json={"status": "Done"})
+
+	assert response.status_code == 200
+	assert response.json()["status"] == "Done"
+
+
+def test_patch_task_from_done_back_to_inprogress_should_succeed_and_persist_the_rollback_status(client):
+	create_response = client.post(
+		"/tasks",
+		json={
+			"title": "Reopen completed task",
+			"status": "Done",
+			"priority": "Medium",
+		},
+	)
+	assert create_response.status_code == 201
+	task_id = create_response.json()["id"]
+
+	response = client.patch(f"/tasks/{task_id}", json={"status": "InProgress"})
+
+	assert response.status_code == 200
+	assert response.json()["status"] == "InProgress"
+
+
+def test_patch_task_from_done_directly_to_todo_should_be_rejected_as_an_invalid_transition(client):
+	create_response = client.post(
+		"/tasks",
+		json={
+			"title": "Attempt invalid rollback",
+			"status": "Done",
+			"priority": "Medium",
+		},
+	)
+	assert create_response.status_code == 201
+	task_id = create_response.json()["id"]
+
+	response = client.patch(f"/tasks/{task_id}", json={"status": "ToDo"})
+
+	assert response.status_code == 422
+	assert "Invalid status transition from Done to ToDo" in response.json()["detail"]
 
 
 def test_patch_invalid_transition_todo_to_done_returns_422(client, created_task):
@@ -133,6 +195,26 @@ def test_patch_same_status_returns_422(client, created_task):
 	response = client.patch(f"/tasks/{created_task['id']}", json={"status": "ToDo"})
 
 	assert response.status_code == 422
+
+
+def test_patch_with_whitespace_only_title_should_fail_validation(client, created_task):
+	response = client.patch(f"/tasks/{created_task['id']}", json={"title": " "})
+
+	assert response.status_code == 422
+	assert "title must not be blank" in response.text
+
+
+def test_patch_with_empty_json_object_should_behave_as_no_op_update_and_return_existing_task(client, created_task):
+	response = client.patch(f"/tasks/{created_task['id']}", json={})
+
+	assert response.status_code == 200
+	body = response.json()
+	assert body["id"] == created_task["id"]
+	assert body["title"] == created_task["title"]
+	assert body["description"] == created_task["description"]
+	assert body["status"] == created_task["status"]
+	assert body["priority"] == created_task["priority"]
+	assert body["assignee"] == created_task["assignee"]
 
 
 def test_delete_existing_returns_204_no_body(client, created_task):
