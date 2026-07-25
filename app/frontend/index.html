@@ -1190,21 +1190,18 @@
             }
 
             function buildTasksQuery() {
-                const params = new URLSearchParams();
-                const trimmedSearch = searchFilter.trim();
-                const trimmedAssignee = assigneeFilter.trim();
+                const filterParams = {
+                    search: searchFilter.trim(),
+                    priority: priorityFilter,
+                    assignee: assigneeFilter.trim(),
+                    overdue: overdueFilter
+                };
 
-                if (trimmedSearch) {
-                    params.set("search", trimmedSearch);
-                }
-                if (priorityFilter) {
-                    params.set("priority", priorityFilter);
-                }
-                if (trimmedAssignee) {
-                    params.set("assignee", trimmedAssignee);
-                }
-                if (overdueFilter) {
-                    params.set("overdue", overdueFilter);
+                const params = new URLSearchParams();
+                for (const [name, value] of Object.entries(filterParams)) {
+                    if (value) {
+                        params.set(name, value);
+                    }
                 }
 
                 const query = params.toString();
