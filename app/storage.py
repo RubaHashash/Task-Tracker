@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from uuid import uuid4
 
 from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
@@ -13,6 +13,7 @@ def add_task(payload: TaskCreate) -> TaskResponse:
 		id=str(uuid4()),
 		title=payload.title,
 		description=payload.description or "",
+		due_date=payload.due_date,
 		status=payload.status,
 		priority=payload.priority,
 		assignee=payload.assignee,
@@ -26,12 +27,42 @@ def add_task(payload: TaskCreate) -> TaskResponse:
 def get_all_tasks(
 	status: TaskStatus | None = None,
 	priority: TaskPriority | None = None,
+	overdue: bool | None = None,
+	assignee: str | None = None,
+	search: str | None = None,
 ) -> list[TaskResponse]:
 	tasks = list(_tasks.values())
 	if status is not None:
 		tasks = [task for task in tasks if task.status == status]
 	if priority is not None:
 		tasks = [task for task in tasks if task.priority == priority]
+	if overdue is not None:
+		today = date.today()
+		tasks = [
+			task
+			for task in tasks
+			if (
+				task.due_date is not None
+				and task.due_date < today
+				and task.status != TaskStatus.DONE
+			)
+			== overdue
+		]
+	normalized_assignee = assignee.strip().lower() if assignee else ""
+	if normalized_assignee:
+		tasks = [
+			task
+			for task in tasks
+			if (task.assignee or "").strip().lower() == normalized_assignee
+		]
+	normalized_search = search.strip().lower() if search else ""
+	if normalized_search:
+		tasks = [
+			task
+			for task in tasks
+			if normalized_search in task.title.lower()
+			or normalized_search in task.description.lower()
+		]
 	return tasks
 
 

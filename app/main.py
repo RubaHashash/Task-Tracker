@@ -44,8 +44,17 @@ def healthcheck() -> dict[str, str]:
 def list_tasks(
 	status: TaskStatus | None = None,
 	priority: TaskPriority | None = None,
+	overdue: bool | None = None,
+	assignee: str | None = None,
+	search: str | None = None,
 ) -> list[TaskResponse]:
-	return storage.get_all_tasks(status=status, priority=priority)
+	return storage.get_all_tasks(
+		status=status,
+		priority=priority,
+		overdue=overdue,
+		assignee=assignee,
+		search=search,
+	)
 
 
 @app.get("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
