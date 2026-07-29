@@ -29,6 +29,23 @@ class TaskCreate(BaseModel):
 	@field_validator("title")
 	@classmethod
 	def validate_title(cls, value: str) -> str:
+		"""Validate and normalize a task title.
+
+		Runs automatically as a Pydantic field validator whenever a
+		``TaskCreate`` is constructed.
+
+		Args:
+			value: The raw title string supplied by the caller.
+
+		Returns:
+			The title with leading/trailing whitespace stripped.
+
+		Raises:
+			ValueError: If the stripped title is empty, or longer than
+				200 characters. Pydantic surfaces this as a 422
+				response when the model is used as a FastAPI request
+				body.
+		"""
 		stripped_value = value.strip()
 		if not stripped_value:
 			raise ValueError("title must not be blank")
@@ -50,6 +67,23 @@ class TaskUpdate(BaseModel):
 	@field_validator("title")
 	@classmethod
 	def validate_title(cls, value: str | None) -> str | None:
+		"""Validate and normalize an optional task title update.
+
+		Same rules as ``TaskCreate.validate_title``, except ``None``
+		(meaning "leave the title unchanged") is passed through
+		without validation.
+
+		Args:
+			value: The raw title string, or ``None`` if the title is
+				not being updated.
+
+		Returns:
+			The stripped title, or ``None`` if ``value`` was ``None``.
+
+		Raises:
+			ValueError: If ``value`` is not ``None`` and the stripped
+				title is empty, or longer than 200 characters.
+		"""
 		if value is None:
 			return value
 		stripped_value = value.strip()
